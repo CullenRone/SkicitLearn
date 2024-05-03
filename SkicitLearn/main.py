@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
 import mglearn
-from sklearn import datasets
+import faces as faces
+
+
+from sklearn import datasets, __all__, svm
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from mpl_toolkits.mplot3d import Axes3D
@@ -10,15 +13,17 @@ import seaborn as sns
 import plotly.graph_objects as go
 from sklearn.datasets import load_iris, load_diabetes, load_breast_cancer
 from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
+from sklearn.datasets import fetch_olivetti_faces
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report,mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report,mean_squared_error, r2_score, f1_score, roc_auc_score
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.svm import LinearSVC, SVC
 
 # PhanTriDuy_somay31
 iris = datasets.load_iris()
 digits = datasets.load_digits()
+
 
 def Cau1():
     iris = datasets.load_iris()
@@ -497,7 +502,375 @@ def Cau20():
     print("Logistic Regression accuracy:", accuracy_score(y_test, y_pred_log_reg))
     print("Linear SVC accuracy:", accuracy_score(y_test, y_pred_lin_svc))
 
+def Cau21():
+   faces = fetch_olivetti_faces()
+   print(faces.DESCR)
 
+def Cau22():
+    faces = fetch_olivetti_faces()
+    # Accessing the images
+    images = faces.images
+    print("Shape of images array:", images.shape)  # This will give you the shape of the array containing the images
+
+    # Accessing the flattened data
+    data = faces.data
+    print("Shape of data array:", data.shape)  # This will give you the shape of the flattened data array
+
+    # Accessing the target labels
+    target = faces.target
+    print("Shape of target array:", target.shape)  # This will give you the shape of the array containing the labels
+    print("Unique labels:", np.unique(target))  # This will give you the unique labels in the target array
+
+def Cau23(n_faces):
+    faces = fetch_olivetti_faces()
+    n_rows, n_cols = int(np.sqrt(n_faces)), int(np.sqrt(n_faces))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(10, 10))
+    for i in range(n_faces):
+        row = i // n_cols
+        col = i % n_cols
+        axes[row, col].imshow(faces.images[i], cmap="gray")
+        axes[row, col].axis("off")
+    plt.show()
+
+
+
+def Cau24():
+    X, y = mglearn.datasets.make_forge()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+    # Create an SVC object with a linear kernel
+    svm_linear = SVC(kernel='linear')
+
+    # Fit the model with your data and labels
+    svm_linear.fit(X_train, y_train)
+
+    # Predict the labels of your test data
+    y_pred_linear = svm_linear.predict(X_test)
+
+    # Evaluate the performance of the linear SVM
+    accuracy_linear = accuracy_score(y_test, y_pred_linear)
+    print(f"Accuracy (linear SVM): {accuracy_linear}")
+
+
+def Cau25():
+    X, y = mglearn.datasets.make_forge()
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42)
+    # Create an SVC object with a linear kernel
+    svm_linear = SVC(kernel='linear')
+
+    # Fit the model with your data and labels
+    svm_linear.fit(X_train, y_train)
+
+    # Predict the labels of your test data
+    y_pred_linear = svm_linear.predict(X_test)
+
+    # Evaluate the performance of the linear SVM
+    accuracy_linear = accuracy_score(y_test, y_pred_linear)
+    print(f"Accuracy (linear SVM): {accuracy_linear}")
+
+
+def k_fold_cross_validation(X, y, k=5, model=None):
+    kf = KFold(n_splits=k, shuffle=True, random_state=42)
+    scores = []
+
+    for train_index, test_index in kf.split(X):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+
+        if model is not None:
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            score = accuracy_score(y_test, y_pred)
+        else:
+            # Fit any model here and replace this with the appropriate scoring metric
+            score = 0
+
+    scores.append(score)
+
+    return np.mean(scores)
+
+def Cau26():
+    X, y = mglearn.datasets.make_forge()
+    # Create an SVC object with a linear kernel
+    svm_linear = SVC(kernel='linear')
+
+    # Perform k-fold cross-validation
+    k_fold_accuracy = k_fold_cross_validation(X, y, k=5, model=svm_linear)
+    print(f"K-fold cross-validation accuracy (linear SVM): {k_fold_accuracy}")
+
+
+def train_and_evaluate_svm(x_train, y_train, x_test, y_test):
+    # Create an SVM object with a linear kernel
+    svm_model = SVC(kernel='linear')
+
+    # Train the model with the training data
+    svm_model.fit(x_train, y_train)
+
+    # Predict the labels of the test data
+    y_pred = svm_model.predict(x_test)
+
+    # Calculate the accuracy of the model
+    accuracy = accuracy_score(y_test, y_pred)
+
+    print(f"The model is {accuracy * 100}% accurate")
+
+    return svm_model
+
+def Cau27():
+    X, y = mglearn.datasets.make_forge()
+
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    svm_model = train_and_evaluate_svm(x_train, y_train, x_test, y_test)
+    svm_model = SVC(kernel='linear')
+    svm_model.fit(x_train, y_train)
+
+    # Print the SVM model
+    print(svm_model)
+
+def Cau28():
+    clf = LogisticRegression()
+
+    # Generate a random dataset
+    X, y = mglearn.datasets.make_forge()
+
+    # Split the dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Scale the features
+    sc = StandardScaler()
+    X_train = sc.fit_transform(X_train)
+    X_test = sc.transform(X_test)
+
+    # Train the classifier on the training set
+    clf.fit(X_train, y_train)
+
+    # Evaluate the performance of the classifier
+    y_pred = clf.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average='binary')
+    recall = recall_score(y_test, y_pred, average='binary')
+    f1 = f1_score(y_test, y_pred, average='binary')
+
+
+    # Print the evaluation metrics
+    print("Accuracy:", accuracy)
+    print("Precision:", precision)
+    print("Recall:", recall)
+    print("F1-score:", f1)
+
+def has_glasses(glasses, faces):
+    target = [0] * len(faces)
+    for start1, end1 in glasses:
+        for i, (start2, end2) in enumerate(faces):
+            if start1 <= start2 <= end1 or start1 <= end2 <= end1:
+                target[i] = 1
+    return target
+
+def Cau29(glasses, y):
+    glasses = [(10, 19), (30, 32), (37, 38), (50, 59), (63, 64), (69, 69), (120, 121), (124, 129), (130, 139),
+               (160, 161), (164, 169), (180, 182), (185, 185), (189, 189), (190, 192), (194, 194), (196, 199),
+               (260, 269), (270, 279), (300, 309), (330, 339), (358, 359), (360, 369)]
+    faces = [(15, 17), (20, 22), (35, 36), (55, 56), (65, 66), (125, 126), (135, 136), (165, 166), (183, 184),
+             (191, 193), (265, 266), (275, 276), (305, 306), (335, 336), (365, 366)]
+
+    target = has_glasses(glasses, faces)
+    print(target)
+
+def Cau30():
+    def Cau29():
+        glasses = [(10, 19), (30, 32), (37, 38), (50, 59), (63, 64), (69, 69), (120, 121), (124, 129), (130, 139),
+                   (160, 161), (164, 169), (180, 182), (185, 185), (189, 189), (190, 192), (194, 194), (196, 199),
+                   (260, 269), (270, 279), (300, 309), (330, 339), (358, 359), (360, 369)]
+
+    faces = [(15, 17), (20, 22), (35, 36), (55, 56), (65, 66), (125, 126), (135, 136), (165, 166), (183, 184),
+             (191, 193), (265, 266), (275, 276), (305, 306), (335, 336), (365, 366)]
+
+    target = has_glasses(glasses, faces)
+    print(target)
+
+    def Cau30():
+        glasses = [(10, 19), (30, 32), (37, 38), (50, 59), (63, 64), (69, 69), (120, 121), (124, 129), (130, 139),
+                   (160, 161), (164, 169), (180, 182), (185, 185), (189, 189), (190, 192), (194, 194), (196, 199),
+                   (260, 269), (270, 279), (300, 309), (330, 339), (358, 359), (360, 369)]
+
+    faces = [(15, 17), (20, 22), (35, 36), (55, 56), (65, 66), (125, 126), (135, 136), (165, 166), (183, 184),
+             (191, 193), (265, 266), (275, 276), (305, 306), (335, 336), (365, 366)]
+
+    # Create random features for each sample in `faces`
+    X = np.random.rand(len(faces), 10)
+
+    # Create a new SVC classifier
+    clf = svm.SVC()
+    target = has_glasses(glasses, faces)
+
+    # Train the classifier with the new target vector
+    X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=0.2, random_state=42)
+    clf.fit(X_train, y_train)
+
+    # Evaluate the classifier on the test set
+    accuracy = clf.score(X_test, y_test)
+    print("Accuracy:", accuracy)
+
+def Cau31():
+    X, y = mglearn.datasets.make_forge()
+
+    glasses = [(10, 19), (30, 32), (37, 38), (50, 59), (63, 64), (69, 69), (120, 121), (124, 129), (130, 139),
+               (160, 161), (164, 169), (180, 182), (185, 185), (189, 189), (190, 192), (194, 194), (196, 199),
+               (260, 269), (270, 279), (300, 309), (330, 339), (358, 359), (360, 369)]
+    faces = [(15, 17), (20, 22), (35, 36), (55, 56), (65, 66), (125, 126), (135, 136), (165, 166), (183, 184),
+             (191, 193), (265, 266), (275, 276), (305, 306), (335, 336), (365, 366)]
+
+    # Create a random target vector with length equal to the number of samples in X
+    target = np.random.randint(0, 2, size=len(X))
+
+    # Set the target values for the faces with glasses
+    for i, face in enumerate(faces):
+        start, end = face
+    target[start - 1:end] = 1
+
+    X_train, X_test, y_train, y_test = train_test_split(X, target, test_size=0.2, random_state=42)
+
+    # Create a new SVC classifier with linear kernel
+    svc_2 = svm.SVC(kernel='linear')
+
+    # Perform 5-fold cross-validation
+    scores = cross_val_score(svc_2, X_train, y_train, cv=5)
+
+    # Print the mean accuracy
+    print("Mean accuracy:", scores.mean())
+
+def load_data():
+    X, y = mglearn.datasets.make_forge()
+
+    groups = {}
+    for i, img in enumerate(X):
+        key = y[i]
+    if key not in groups:
+        groups[key] = []
+    groups[key].append(img)
+    return groups
+
+def Cau32():
+
+    # Load the data
+    data = load_data()
+
+    # Extract the images of the person with indexes from 30 to 39
+    person_data = []
+    for i in range(100, 1001):
+        person_data.extend(data[str(i)])
+
+    # Split the data into training and testing sets
+
+def print_faces(faces, labels, n):
+    plt.figure(figsize=(10, 4))
+    for i in range(n):
+    plt.subplot(2, n, i+1)
+    plt.imshow(faces[i], cmap='gray')
+    plt.title('Label: {}'.format(labels[i]))
+    plt.axis('off')
+    plt.show()
+
+def Cau33():
+# Load the data
+    data = load_data()
+
+# Extract the images of the person with indexes from 100 to 1000
+    person_data
+
+def Cau35():
+    news = fetch_20newsgroups(subset="all")
+    print(type(news.data))
+    print(type(news.target))
+    print(type(news.target_names))
+    print(news.target_names)
+
+def Cau36():
+
+
+    # Assume X and y are your features and target variables
+    X_train, X_test, y_train, y_test = train_test_split(10, 20, test_size=0.25, random_state=0)
+    from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+
+    # Assume X_train and X_test are your training and testing text data
+
+    # Use CountVectorizer to convert text data to a matrix of token counts
+    count_vectorizer = CountVectorizer()
+    X_train_count = count_vectorizer.fit_transform(X_train)
+    X_test_count = count_vectorizer.transform(X_test)
+
+def Cau37():
+    X, y = mglearn.datasets.make_forge()
+
+
+    # Load your dataset (e.g., 20 Newsgroups)
+    # ...
+
+    # Create three pipelines with different vectorizers
+    pipeline_count = Pipeline([
+    ('vectorizer', CountVectorizer()),
+    ('classifier', MultinomialNB())
+    ])
+
+    pipeline_hashing = Pipeline([
+    ('vectorizer', HashingVectorizer()),
+    ('classifier', MultinomialNB())
+    ])
+
+    pipeline_tfidf = Pipeline([
+    ('vectorizer', TfidfVectorizer()),
+    ('classifier', MultinomialNB())
+    ])
+
+    # Train and evaluate each pipeline
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+
+    pipelines = [pipeline_count, pipeline_hashing, pipeline_tfidf]
+    for pipeline in pipelines:
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"Vectorizer: {pipeline.named_steps['vectorizer'].__class__.__name__}, Accuracy: {accuracy:.3f}")
+
+def k_fold_cross_validation(classifier, X, y, k=5):
+"""
+Performs k-fold cross-validation on the specified data and labels.
+
+Parameters:
+classifier (Classifier): The classifier to use for cross-validation.
+X (array-like): The input data.
+y (array-like): The target data.
+k (int): The number of folds for cross-validation.
+
+Returns:
+scores (list): The cross-validation scores.
+"""
+    kf = KFold(n_splits=k)
+    scores = []
+
+    for train_index, test_index in kf.split(X):
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
+
+    classifier.fit(X_train, y_train)
+    score = classifier.score(X_test, y_test)
+    scores.append(score)
+
+    return scores
+
+def Cau38():
+    X, y = mglearn.datasets.make_forge()
+    # Assume that `X` and `y` are the input and target data
+
+    clf = LogisticRegression()
+    scores = k_fold_cross_validation(clf, X, y)
+    print(scores)
+
+def Cau39():
+    X, y = mglearn.datasets.make_forge()
+    # Assume that `X` and `y` are the input and target data
+    classifier = LogisticRegression()
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -520,7 +893,26 @@ if __name__ == '__main__':
     # Cau17()
     # Cau18()
     # Cau19()
-    Cau20()
+    # Cau20()
+    # Cau21()
+    # Cau22()
+    # Cau23(9)
+    # Cau24()
+    # Cau25()
+    # Cau26()
+    # Cau27()
+    # Cau28()
+    # Cau29()
+    # Cau30()
+    # Cau31()
+    # Cau32()
+    # Cau33()
+    # Cau34()
+    # Cau35()
+    # Cau36()
+    # Cau37()
+    # Cau38()
+    # Cau39()
 
 
 
